@@ -64,17 +64,22 @@ l2 = Dim(2);
 l3= Dim(3);
 l4= Dim(4);
 
-target = gpuArray(target);
+% target = gpuArray(target);
+target = target;
 
 % Re-form weight matrices from parameter vector from minFunc
-w1 = gpuArray(reshape(VV(1:(l1+1)*l2),l1+1,l2));
+% w1 = gpuArray(reshape(VV(1:(l1+1)*l2),l1+1,l2));
+w1 = reshape(VV(1:(l1+1)*l2),l1+1,l2);
 xxx = (l1+1)*l2;
-w2 = gpuArray(reshape(VV(xxx+1:xxx+(l2+1)*l3),l2+1,l3));
+% w2 = gpuArray(reshape(VV(xxx+1:xxx+(l2+1)*l3),l2+1,l3));
+w2 = reshape(VV(xxx+1:xxx+(l2+1)*l3),l2+1,l3);
 xxx = xxx+(l2+1)*l3;
-w_class = gpuArray(reshape(VV(xxx+1:xxx+(l3+1)*l4),l3+1,l4));
+% w_class = gpuArray(reshape(VV(xxx+1:xxx+(l3+1)*l4),l3+1,l4));
+w_class = reshape(VV(xxx+1:xxx+(l3+1)*l4),l3+1,l4);
 
 % Forward-propagate and compute softmax output
-XX = gpuArray([XX ones(N,1)]);
+% XX = gpuArray([XX ones(N,1)]);
+XX = [XX ones(N,1)];
 w1probs = 1./(1 + exp(-XX*w1)); w1probs = [w1probs  ones(N,1)];
 w2probs = 1./(1 + exp(-w1probs*w2)); w2probs = [w2probs ones(N,1)];
 
