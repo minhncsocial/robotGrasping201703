@@ -158,15 +158,15 @@ for curAng = rotAngs
                     % Extract features for the current rectangle into the
                     % format the DBN expects
                     [curFeat, curFeatMask] = featForRect(curI,curD,curN,curDMask,r,c,h,w,FEATSZ,MASK_RSZ_THRESH);
-                    curFeat = simpleWhiten(curFeat,featMeans,featStds);
-                    curFeat = scaleFeatForMask(curFeat, curFeatMask, trainModes);
+                    curFeat = simpleWhiten(curFeat,means,stds);
+                    curFeat = scaleFeatForMask(curFeat, curFeatMask, modes);
                     
                     % Run the features through the DBN and get a score.
                     % Might be more efficient to collect features for a
                     % group of rectangles and run them all at once
                     w1Probs = 1./(1+exp(-[curFeat 1]*w1));
                     w2Probs = 1./(1+exp(-[w1Probs 1]*w2));
-                    curScore = [w2Probs 1]* w_class;
+                    curScore = [w2Probs 1]* wClass;
                     
                     rectPoints = [r c; r+h c; r+h c+w; r c+w];
                     curRect = localRectToIm(rectPoints,curAng,bbCorners);
