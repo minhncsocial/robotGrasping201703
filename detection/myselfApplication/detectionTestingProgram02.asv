@@ -1,17 +1,9 @@
 %% initialize need directory
-clear all; close all; clc;
-
 startTime0 = clock;
 path_detectionUtils = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\deepGraspingCode1\detection\detectionUtils';
 path_utils = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\deepGraspingCode1\util';
-temp1 = sprintf(path_detectionUtils,pwd)
-temp2 = sprintf(path_utils,pwd);
-
-addpath(path_detectionUtils);
-addpath(path_utils);
-
-% addpath ../detectionUtils/
-% addpath ../../util
+addpath(sprintf(path_detectionUtils,pwd));
+addpath(sprintf(path_utils,pwd));
 
 dataDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
 bgrDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
@@ -61,7 +53,7 @@ widths = sort(widths);
 %% Load grasping data. Loads into a 4-channel image where the first 3
 % channels are RGB and the fourth is depth
 I = graspPCDToRGBDImage(dataDir,instNum);
-BG = double(imread(bgrFN));
+BG = double(imread(bgFN));
 
 elapsedTime1 = etime(clock, startTime1)
 
@@ -85,7 +77,8 @@ fig1 = figure(1);
 imshow(uint8(I(:,:,1:3)));
 drawnow;
 
-elapsedTime2 = etime(clock, startTime2)
+elapsedTime2 = etime(clock, startTime2);
+
 %% convert RGB image to YUV
 
 startTime3 = clock;
@@ -100,11 +93,9 @@ objD = D(bbCorners(1,1):bbCorners(2,1),bbCorners(1,2):bbCorners(2,2),:);
 objM = M(bbCorners(1,1):bbCorners(2,1),bbCorners(1,2):bbCorners(2,2),:);
 objDM = DMask(bbCorners(1,1):bbCorners(2,1),bbCorners(1,2):bbCorners(2,2),:);
 
-elapsedTime3 = etime(clock, startTime3)
+elapsedTime3 = etime(clock, startTime3);
 
 %% initialize grasping rectangle
-startTime4 = clock;
-
 bestScore = -inf;
 
 bestAng = -1;
@@ -248,4 +239,3 @@ rectPoints = [bestR bestC; bestR+bestH bestC; bestR+bestH bestC+bestW; bestR bes
 
 bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
 
-elapsedTime4 = etime(clock, startTime4)
