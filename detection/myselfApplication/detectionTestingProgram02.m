@@ -65,7 +65,7 @@ DMask = D ~= 0;
 D = smartInterpMaskedData(D,DMask);
 
 %% display input image
-figure(1);
+fig1 = figure(1);
 imshow(uint8(I(:,:,1:3)));
 drawnow;
 
@@ -122,6 +122,12 @@ for curAng = rotAngs
     
     curRows = size(curI,1);
     curCols = size(curI,2);
+    
+    %% ===========================Score Table==============================
+    scoreTable = zeros(curRows, curCols);
+    fig2222 = figure(2222);
+    %% ====================================================================
+    
     % Going by the r/c dimensions first, then w/h should be more cache
     % efficient since it repeatedly reads from the same locations. Who
     % knows if that actually matters but the ordering's arbitrary anyway
@@ -172,6 +178,7 @@ for curAng = rotAngs
                     curRect = localRectToIm(rectPoints,curAng,bbCorners);
                     
                     %figure(1);
+                    set(0, 'CurrentFigure', fig1);
                     removeLines(prevLines);
                     prevLines = plotGraspRect(curRect);
                     %delete(barH);
@@ -194,10 +201,18 @@ for curAng = rotAngs
                         bestLines = plotGraspRect(curRect,'g','y');
                         drawnow;
                     end
+                    
+                    %% ================Update Score========================
+                    if curScore > scoreTable(r, c) 
+                        scoreTable(r, c) = curScore;
+                    end
+                    %% ====================================================
                 end
             end
         end
     end
+    set(0, 'CurrentFigure', fig2222);
+    surf(scoreTable);
 end
 
 % removeLines(prevLines);
