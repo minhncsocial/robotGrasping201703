@@ -1,4 +1,4 @@
-%% initialize
+%% initialize need directory
 path_detectionUtils = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\deepGraspingCode1\detection\detectionUtils';
 path_utils = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\deepGraspingCode1\util';
 addpath(sprintf(path_detectionUtils,pwd));
@@ -8,11 +8,13 @@ dataDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
 bgrDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
 instNum = sscanf('pcd0100r.png', '%*3c%u')
 
+%% load need data for detection
 load ../../data/bgNums.mat
 load ../../data/graspModes24.mat
 load ../../weights/graspWFinal.mat
 load ../../data/graspWhtParams.mat
 
+%% config parameters for detection
 % Just use the positive-class weights for grasping.
 w_class = w_class(:,1);
 
