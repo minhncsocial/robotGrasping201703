@@ -85,7 +85,7 @@ DMask = D ~= 0;
 D = smartInterpMaskedData(D,DMask);
 
 %% display input image
-fig1 = figure(1);
+fig11 = figure(11);
 imshow(uint8(I(:,:,1:3)));
 drawnow;
 
@@ -111,11 +111,11 @@ startTime4 = clock;
 
 bestScore = -inf;
 
-bestAng = -1;
-bestW = -1;
-bestH = -1;
-bestR = -1;
-bestC = -1;
+bestAng = 0;
+bestW = 1;
+bestH = 1;
+bestR = 1;
+bestC = 1;
 
 % Precompute which widths we need to use with each height so we don't have
 % to compute this in an inner loop
@@ -151,6 +151,11 @@ for curAng = rotAngs
     curRows = size(curI,1);
     curCols = size(curI,2);
     
+    %% ===========================Score Table==============================
+    scoreTable = zeros(curRows, curCols)-10;
+    fig2222 = figure(2222);
+    %% ====================================================================
+    
     % Going by the r/c dimensions first, then w/h should be more cache
     % efficient since it repeatedly reads from the same locations. Who
     % knows if that actually matters but the ordering's arbitrary anyway
@@ -160,25 +165,36 @@ for curAng = rotAngs
     %% try rectangle center's coordinates
     for rowCenter = halfMinHeight:scanStep:curRows-halfMinHeight
         for colCenter = halfMinWidth:scanStep:curCols-halfMinWidth
-            for heiRect = 10:10:90
+            for hh = 1:length(heights)
+                heiRect = heights(hh);
                 % ignore the invalid rectangle
                 if (rowCenter-heiRect/2 < 1) | (rowCenter+heiRect/2 > curRows)
                     continue;
                 end
                 
-                for widRect = 10:10:90
+                for widRect = widths(useWdForHt(hh,:))
                     % ignore the invalid 
-                    if (colCenter-widRect/2 < 1) | (colCenter+widRect/2 > curCols)
+                    if (widRect <= heiRect) | (colCenter-widRect/2 < 1) | (colCenter+widRect/2 > curCols)
                         continue;
                     end
                     
                     heiDiv2 = heiRect/2;
                     widDiv2 = widRect/2;
                     
+                    tempRectInfo = [rowCenter-heiDiv2; colCenter-widDiv2; heiRect; widRect];
+                    tempRectPoints = [rowCenter-heiDiv2 colCenter-widDiv2; rowCenter+heiDiv2 colCenter-widDiv2; rowCenter+heiDiv2 colCenter+widDiv2; rowCenter-heiDiv2 colCenter+widDiv2];
+                    
+                    % If the rectangle doesn't contain enough of the
+                    % object (plus padding), move on because it's probably
+                    % not a valid grasp regardless of score
+                    if rectMaskFraction(curMask,tempRectInfo(1),tempRectInfo(2),tempRectInfo(3),tempRectInfo(4)) < OBJ_MASK_THRESH || cornerMaskedOut(curIMask,tempRectInfo(1),tempRectInfo(2),tempRectInfo(3),tempRectInfo(4))
+                        continue;
+                    end
+                    
                     % Have a valid candidate rectangle
                     % Extract features for the current rectangle into the
                     % format the DBN expects
-                    [curFeat, curFeatMask] = featForRect(curI,curD,curN,curDMask,rowCenter-heiDiv2,colCenter-widDiv2,heiRect,widRect,FEATSZ,MASK_RSZ_THRESH);
+                    [curFeat, curFeatMask] = featForRect(curI,curD,curN,curDMask,tempRectInfo(1),tempRectInfo(2),tempRectInfo(3),tempRectInfo(4),FEATSZ,MASK_RSZ_THRESH);
                     curFeat = simpleWhiten(curFeat,featMeans,featStds);
                     curFeat = scaleFeatForMask(curFeat, curFeatMask, trainModes);
                     
@@ -189,11 +205,11 @@ for curAng = rotAngs
                     w2Probs = 1./(1+exp(-[w1Probs 1]*w2));
                     curScore = [w2Probs 1]* w_class;
                     
-                    rectPoints = [rowCenter-heiDiv2 colCenter-widDiv2; rowCenter+heiDiv2 colCenter-widDiv2; rowCenter+heiDiv2 colCenter+widDiv2; rowCenter-heiDiv2 colCenter+widDiv2];
+                    rectPoints = tempRectPoints;
                     curRect = localRectToIm(rectPoints,curAng,bbCorners);
                     
                     %figure(1);
-                    set(0, 'CurrentFigure', fig1);
+                    set(0, 'CurrentFigure', fig11);
                     removeLines(prevLines);
                     prevLines = plotGraspRect(curRect);
                     %delete(barH);
@@ -215,11 +231,18 @@ for curAng = rotAngs
                         removeLines(bestLines);
                         bestLines = plotGraspRect(curRect,'g','y');
                         drawnow;
+                    end                    
+                    %% ================Update Score========================
+                    if curScore > scoreTable(rowCenter, colCenter) 
+                        scoreTable(rowCenter, colCenter) = curScore;
                     end
+                    %% ====================================================
                 end
             end
         end
     end
+    set(0, 'CurrentFigure', fig2222);
+    surf(scoreTable);
 end
 
 % removeLines(prevLines);
@@ -227,7 +250,7 @@ end
 % Take the best rectangle params we found and convert to image space
 % This is actually a little tricky because the image rotation operation
 % isn't straighforward to invert
-rectPoints = [rowCenter-heiDiv2 colCenter-widDiv2; rowCenter+heiDiv2 colCenter-widDiv2; rowCenter+heiDiv2 colCenter+widDiv2; rowCenter-heiDiv2 colCenter+widDiv2];
+rectPoints = round([bestR-bestH/2 bestC-bestW/2; bestR+bestH/2 bestC-bestW/2; bestR+bestH/2 bestC+bestW/2; bestR-bestH/2 bestC+bestW/2]);
 
 bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
 
