@@ -1,7 +1,9 @@
 %% Test Fixed Height
 %**************************************************************************
 %% initialize need directory
-clear all; close all; clc;
+clear all; 
+% close all; 
+clc;
 
 startTime0 = clock;
 path_detectionUtils = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\deepGraspingCode1\detection\detectionUtils';
