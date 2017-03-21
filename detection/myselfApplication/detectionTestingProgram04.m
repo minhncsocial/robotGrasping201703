@@ -34,7 +34,7 @@ w_class = w_class(:,1);
 bgrFN = sprintf('%s/pcdb%04dr.png',bgrDir,bgNo(instNum));
 
 rotAngs = 0;
-heights = 20;
+heights = 10:10:90;
 widths = 10:10:90;
 scanStep = 10;
 
@@ -151,19 +151,75 @@ for curAng = rotAngs
     curRows = size(curI,1);
     curCols = size(curI,2);
     
-    %% ===========================Score Table==============================
-    scoreTable = zeros(curRows, curCols);
-    fig2222 = figure(2222);
-    %% ====================================================================
-    
     % Going by the r/c dimensions first, then w/h should be more cache
     % efficient since it repeatedly reads from the same locations. Who
     % knows if that actually matters but the ordering's arbitrary anyway
     
-    
-    
-    set(0, 'CurrentFigure', fig2222);
-    surf(scoreTable);
+    halfMinHeight = 5;
+    halfMinWidth = 5;
+    %% try rectangle center's coordinates
+    for rowCenter = halfMinHeight:scanStep:curRows-halfMinHeight
+        for colCenter = halfMinWidth:scanStep:curCols-halfMinWidth
+            for heiRect = 10:10:90
+                % ignore the invalid rectangle
+                if (rowCenter-heiRect/2 < 1) | (rowCenter+heiRect/2 > curRows)
+                    continue;
+                end
+                
+                for widRect = 10:10:90
+                    % ignore the invalid 
+                    if (colCenter-widRect/2 < 1) | (colCenter+widRect/2 > curCols)
+                        continue;
+                    end
+                    
+                    heiDiv2 = heiRect/2;
+                    widDiv2 = widRect/2;
+                    
+                    % Have a valid candidate rectangle
+                    % Extract features for the current rectangle into the
+                    % format the DBN expects
+                    [curFeat, curFeatMask] = featForRect(curI,curD,curN,curDMask,rowCenter-heiDiv2,colCenter-widDiv2,heiRect,widRect,FEATSZ,MASK_RSZ_THRESH);
+                    curFeat = simpleWhiten(curFeat,featMeans,featStds);
+                    curFeat = scaleFeatForMask(curFeat, curFeatMask, trainModes);
+                    
+                    % Run the features through the DBN and get a score.
+                    % Might be more efficient to collect features for a
+                    % group of rectangles and run them all at once
+                    w1Probs = 1./(1+exp(-[curFeat 1]*w1));
+                    w2Probs = 1./(1+exp(-[w1Probs 1]*w2));
+                    curScore = [w2Probs 1]* w_class;
+                    
+                    rectPoints = [rowCenter-heiDiv2 colCenter-widDiv2; rowCenter+heiDiv2 colCenter-widDiv2; rowCenter+heiDiv2 colCenter+widDiv2; rowCenter-heiDiv2 colCenter+widDiv2];
+                    curRect = localRectToIm(rectPoints,curAng,bbCorners);
+                    
+                    %figure(1);
+                    set(0, 'CurrentFigure', fig1);
+                    removeLines(prevLines);
+                    prevLines = plotGraspRect(curRect);
+                    %delete(barH);
+                    %barH = drawScoreBar(curScore,max(bestScore*1.1,1),20,320,30,300);
+                    %figure(2);
+                    %bar(w2Probs);
+                    %axis([0 51 0 1]);
+                    drawnow;
+
+                    if curScore > bestScore
+                        bestScore = curScore;
+                        bestAng = curAng;
+                        bestR = rowCenter;
+                        bestC = colCenter;
+                        bestH = heiRect;
+                        bestW = widRect;
+                        
+                        %figure(1);
+                        removeLines(bestLines);
+                        bestLines = plotGraspRect(curRect,'g','y');
+                        drawnow;
+                    end
+                end
+            end
+        end
+    end
 end
 
 % removeLines(prevLines);
@@ -171,7 +227,7 @@ end
 % Take the best rectangle params we found and convert to image space
 % This is actually a little tricky because the image rotation operation
 % isn't straighforward to invert
-rectPoints = [bestR bestC; bestR+bestH bestC; bestR+bestH bestC+bestW; bestR bestC+bestW];
+rectPoints = [rowCenter-heiDiv2 colCenter-widDiv2; rowCenter+heiDiv2 colCenter-widDiv2; rowCenter+heiDiv2 colCenter+widDiv2; rowCenter-heiDiv2 colCenter+widDiv2];
 
 bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
 
