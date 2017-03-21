@@ -1,9 +1,21 @@
+%% Test Fixed Height
+%**************************************************************************
 %% initialize need directory
+clear all; 
+% close all; 
+clc;
+
 startTime0 = clock;
 path_detectionUtils = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\deepGraspingCode1\detection\detectionUtils';
 path_utils = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\deepGraspingCode1\util';
-addpath(sprintf(path_detectionUtils,pwd));
-addpath(sprintf(path_utils,pwd));
+temp1 = sprintf(path_detectionUtils,pwd)
+temp2 = sprintf(path_utils,pwd);
+
+addpath(path_detectionUtils);
+addpath(path_utils);
+
+% addpath ../detectionUtils/
+% addpath ../../util
 
 dataDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
 bgrDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
@@ -21,8 +33,8 @@ w_class = w_class(:,1);
 
 bgrFN = sprintf('%s/pcdb%04dr.png',bgrDir,bgNo(instNum));
 
-rotAngs = 0:15:(11*15);
-heights = 10:10:90;
+rotAngs = 0;
+heights = 20;
 widths = 10:10:90;
 scanStep = 10;
 
@@ -53,7 +65,7 @@ widths = sort(widths);
 %% Load grasping data. Loads into a 4-channel image where the first 3
 % channels are RGB and the fourth is depth
 I = graspPCDToRGBDImage(dataDir,instNum);
-BG = double(imread(bgFN));
+BG = double(imread(bgrFN));
 
 elapsedTime1 = etime(clock, startTime1)
 
@@ -77,8 +89,7 @@ fig1 = figure(1);
 imshow(uint8(I(:,:,1:3)));
 drawnow;
 
-elapsedTime2 = etime(clock, startTime2);
-
+elapsedTime2 = etime(clock, startTime2)
 %% convert RGB image to YUV
 
 startTime3 = clock;
@@ -93,9 +104,11 @@ objD = D(bbCorners(1,1):bbCorners(2,1),bbCorners(1,2):bbCorners(2,2),:);
 objM = M(bbCorners(1,1):bbCorners(2,1),bbCorners(1,2):bbCorners(2,2),:);
 objDM = DMask(bbCorners(1,1):bbCorners(2,1),bbCorners(1,2):bbCorners(2,2),:);
 
-elapsedTime3 = etime(clock, startTime3);
+elapsedTime3 = etime(clock, startTime3)
 
 %% initialize grasping rectangle
+startTime4 = clock;
+
 bestScore = -inf;
 
 bestAng = -1;
@@ -146,86 +159,9 @@ for curAng = rotAngs
     % Going by the r/c dimensions first, then w/h should be more cache
     % efficient since it repeatedly reads from the same locations. Who
     % knows if that actually matters but the ordering's arbitrary anyway
-    for r = 1:scanStep:curRows-min(heights)
-        for c = 1:scanStep:curCols-min(widths)
-            for i = 1:length(heights)
-                
-                h = heights(i);
-                
-                % If we ran off the bottom, we can move on to the next col
-                if r + h > curRows
-                    break;
-                end
-                
-                % Only run through the widths we need to - anything smaller
-                % than the current height (as precomputed) doesn't need to
-                % be used
-                for w = widths(useWdForHt(i,:))
-                    
-                    % If we run off the side, we can move on to
-                    % the next height
-                    if c + w > curCols
-                        break;
-                    end
-                    
-                    % If the rectangle doesn't contain enough of the
-                    % object (plus padding), move on because it's probably
-                    % not a valid grasp regardless of score
-                    if rectMaskFraction(curMask,r,c,h,w) < OBJ_MASK_THRESH || cornerMaskedOut(curIMask,r,c,h,w)
-                        continue;
-                    end
-                    
-                    % Have a valid candidate rectangle
-                    % Extract features for the current rectangle into the
-                    % format the DBN expects
-                    [curFeat, curFeatMask] = featForRect(curI,curD,curN,curDMask,r,c,h,w,FEATSZ,MASK_RSZ_THRESH);
-                    curFeat = simpleWhiten(curFeat,featMeans,featStds);
-                    curFeat = scaleFeatForMask(curFeat, curFeatMask, trainModes);
-                    
-                    % Run the features through the DBN and get a score.
-                    % Might be more efficient to collect features for a
-                    % group of rectangles and run them all at once
-                    w1Probs = 1./(1+exp(-[curFeat 1]*w1));
-                    w2Probs = 1./(1+exp(-[w1Probs 1]*w2));
-                    curScore = [w2Probs 1]* w_class;
-                    
-                    rectPoints = [r c; r+h c; r+h c+w; r c+w];
-                    curRect = localRectToIm(rectPoints,curAng,bbCorners);
-                    
-                    %figure(1);
-                    set(0, 'CurrentFigure', fig1);
-                    removeLines(prevLines);
-                    prevLines = plotGraspRect(curRect);
-                    %delete(barH);
-                    %barH = drawScoreBar(curScore,max(bestScore*1.1,1),20,320,30,300);
-                    %figure(2);
-                    %bar(w2Probs);
-                    %axis([0 51 0 1]);
-                    drawnow;
-
-                    if curScore > bestScore
-                        bestScore = curScore;
-                        bestAng = curAng;
-                        bestR = r;
-                        bestC = c;
-                        bestH = h;
-                        bestW = w;
-                        
-                        %figure(1);
-                        removeLines(bestLines);
-                        bestLines = plotGraspRect(curRect,'g','y');
-                        drawnow;
-                    end
-                    
-                    %% ================Update Score========================
-                    if curScore > scoreTable(r, c) 
-                        scoreTable(r, c) = curScore;
-                    end
-                    %% ====================================================
-                end
-            end
-        end
-    end
+    
+    
+    
     set(0, 'CurrentFigure', fig2222);
     surf(scoreTable);
 end
@@ -239,3 +175,4 @@ rectPoints = [bestR bestC; bestR+bestH bestC; bestR+bestH bestC+bestW; bestR bes
 
 bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
 
+elapsedTime4 = etime(clock, startTime4)
