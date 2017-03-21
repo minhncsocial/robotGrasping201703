@@ -33,7 +33,7 @@ w_class = w_class(:,1);
 
 bgrFN = sprintf('%s/pcdb%04dr.png',bgrDir,bgNo(instNum));
 
-rotAngs = 0;
+rotAngs = 0:15:(11*15);
 heights = 10:10:90;
 widths = 10:10:90;
 scanStep = 10;
@@ -228,6 +228,7 @@ for curAng = rotAngs
                         bestW = widRect;
                         
                         %figure(1);
+                        set(0, 'CurrentFigure', fig11);
                         removeLines(bestLines);
                         bestLines = plotGraspRect(curRect,'g','y');
                         drawnow;
