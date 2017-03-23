@@ -34,8 +34,8 @@ w_class = w_class(:,1);
 
 bgrFN = sprintf('%s/pcdb%04dr.png',bgrDir,bgNo(instNum));
 
-% rotAngs = 0:15:(11*15);
-rotAngs = 0;
+rotAngs = 0:15:(11*15);
+% rotAngs = 0;
 heights = 10:10:90;
 widths = 10:10:90;
 scanStep = 10;
@@ -168,14 +168,17 @@ for curAng = rotAngs
 %     for rowCenter = PAD_SZ:scanStep:curRows-PAD_SZ
 %         for colCenter = PAD_SZ:scanStep:curCols-PAD_SZ
     rectCoordinate = [PAD_SZ PAD_SZ curRows-PAD_SZ curCols-PAD_SZ]; %firstRow, firstCol, lastRow, lastCol
-    for iteration = 1:5
-        midRow = round((rectCoordinate(1) + rectCoordinate(3))/2);
-        midCol = round((rectCoordinate(2) + rectCoordinate(4))/2);
+    for iteration = 1:6
+%         midRow = round((rectCoordinate(1) + rectCoordinate(3))/2);
+%         midCol = round((rectCoordinate(2) + rectCoordinate(4))/2);
         
-        subRects(1, :) = [rectCoordinate(1) rectCoordinate(2) midRow midCol];
-        subRects(2, :) = [rectCoordinate(1) midRow midCol rectCoordinate(4)];
-        subRects(3, :) = [midRow rectCoordinate(2) rectCoordinate(3) midCol];
-        subRects(4, :) = [midRow midCol rectCoordinate(3) rectCoordinate(4)];
+        segmentRow = round((rectCoordinate(1) + rectCoordinate(3))/3);
+        segmentCol = round((rectCoordinate(2) + rectCoordinate(4))/3);
+        
+        subRects(1, :) = [rectCoordinate(1) rectCoordinate(2) segmentRow*2 segmentCol*2];
+        subRects(2, :) = [rectCoordinate(1) segmentRow segmentCol*2 rectCoordinate(4)];
+        subRects(3, :) = [segmentRow rectCoordinate(2) rectCoordinate(3) segmentCol*2];
+        subRects(4, :) = [segmentRow segmentCol rectCoordinate(3) rectCoordinate(4)];
         
         tempScore = -1;
         
@@ -221,7 +224,7 @@ for curAng = rotAngs
                     
                     %figure(1);
                     set(0, 'CurrentFigure', fig11);
-%                     removeLines(prevLines);
+                    removeLines(prevLines);
                     prevLines = plotGraspRect(curRect);
                     %delete(barH);
                     %barH = drawScoreBar(curScore,max(bestScore*1.1,1),20,320,30,300);
@@ -240,7 +243,7 @@ for curAng = rotAngs
                         
                         %figure(1);
                         set(0, 'CurrentFigure', fig11);
-%                         removeLines(bestLines);
+                        removeLines(bestLines);
                         bestLines = plotGraspRect(curRect,'g','y');
                         drawnow;
                     end                    
