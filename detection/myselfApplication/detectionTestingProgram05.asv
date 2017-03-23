@@ -34,8 +34,7 @@ w_class = w_class(:,1);
 
 bgrFN = sprintf('%s/pcdb%04dr.png',bgrDir,bgNo(instNum));
 
-% rotAngs = 0:15:(11*15);
-rotAngs = 0;
+rotAngs = 0:15:(11*15);
 heights = 10:10:90;
 widths = 10:10:90;
 scanStep = 10;
@@ -168,21 +167,17 @@ for curAng = rotAngs
 %     for rowCenter = PAD_SZ:scanStep:curRows-PAD_SZ
 %         for colCenter = PAD_SZ:scanStep:curCols-PAD_SZ
     rectCoordinate = [PAD_SZ PAD_SZ curRows-PAD_SZ curCols-PAD_SZ]; %firstRow, firstCol, lastRow, lastCol
-    for iteration = 1:5
+    for iteration = 1:4
         midRow = round((rectCoordinate(1) + rectCoordinate(3))/2);
         midCol = round((rectCoordinate(2) + rectCoordinate(4))/2);
         
-        subRects(1, :) = [rectCoordinate(1) rectCoordinate(2) midRow midCol];
-        subRects(2, :) = [rectCoordinate(1) midRow midCol rectCoordinate(4)];
-        subRects(3, :) = [midRow rectCoordinate(2) rectCoordinate(3) midCol];
-        subRects(4, :) = [midRow midCol rectCoordinate(3) rectCoordinate(4)];
+        subRects(1) = [rectCoordinate(1) rectCoordinate(2) midRow midCol];
+        subRects(2) = [rectCoordinate(1) midRow midCol rectCoordinate(4)];
+        subRects(3) = [midRow rectCoordinate(2) rectCoordinate(3) midCol];
+        subRects(4) = [midRow midCol rectCoordinate(3) rectCoordinate(4)];
         
-        tempScore = -1;
-        
-        for rectCase = 1:3
-            rowCenter = round((subRects(rectCase, 1) + subRects(rectCase, 3))/2);
-            colCenter = round((subRects(rectCase, 2) + subRects(rectCase, 4))/2);
-            
+        for rectCase = 1:4
+            rowCenter = round((subRect(1) + subRect(3))/2);
             for hh = 1:length(heights)
                 heiRect = heights(hh);
                 % ignore the invalid rectangle
@@ -211,17 +206,12 @@ for curAng = rotAngs
                     
                     curScore = scoreRectangle(curI, curD, curN, curMask, curDMask, FEATSZ, MASK_RSZ_THRESH, featMeans, featStds, trainModes, w1, w2, w_class, tempRectInfo(1), tempRectInfo(2), tempRectInfo(3), tempRectInfo(4));
                     
-                    if curScore > tempScore
-                        tempScore = curScore;
-                        tempSelectedRect = subRects(rectCase, :);
-                    end
-                    
                     rectPoints = tempRectPoints;
                     curRect = localRectToIm(rectPoints,curAng,bbCorners);
                     
                     %figure(1);
                     set(0, 'CurrentFigure', fig11);
-%                     removeLines(prevLines);
+                    removeLines(prevLines);
                     prevLines = plotGraspRect(curRect);
                     %delete(barH);
                     %barH = drawScoreBar(curScore,max(bestScore*1.1,1),20,320,30,300);
@@ -240,7 +230,7 @@ for curAng = rotAngs
                         
                         %figure(1);
                         set(0, 'CurrentFigure', fig11);
-%                         removeLines(bestLines);
+                        removeLines(bestLines);
                         bestLines = plotGraspRect(curRect,'g','y');
                         drawnow;
                     end                    
@@ -252,8 +242,6 @@ for curAng = rotAngs
                 end
             end
         end
-        
-        rectCoordinate = tempSelectedRect;
     end
 %         end
 %     end
