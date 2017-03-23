@@ -19,7 +19,7 @@ addpath(path_utils);
 
 dataDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
 bgrDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
-instNum = sscanf('pcd0105r.png', '%*3c%u')
+instNum = sscanf('pcd0107r.png', '%*3c%u')
 
 %% load need data for detection
 load ../../data/bgNums.mat
@@ -45,7 +45,7 @@ startTime1 = clock;
 
 %% initialize parameters
 % PAD_SZ = 20;
-PAD_SZ = 10;
+PAD_SZ = 5;
 
 % Thresholds to use when transforming masks to convert back to binary
 MASK_ROT_THRESH = 0.75;
@@ -163,8 +163,8 @@ for curAng = rotAngs
     halfMinHeight = 5;
     halfMinWidth = 5;
     %% try rectangle center's coordinates
-    for rowCenter = halfMinHeight:scanStep:curRows-halfMinHeight
-        for colCenter = halfMinWidth:scanStep:curCols-halfMinWidth
+    for rowCenter = PAD_SZ:scanStep:curRows-PAD_SZ
+        for colCenter = PAD_SZ:scanStep:curCols-PAD_SZ
             for hh = 1:length(heights)
                 heiRect = heights(hh);
                 % ignore the invalid rectangle
