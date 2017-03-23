@@ -20,7 +20,7 @@ addpath('myselfUtil');
 
 dataDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
 bgrDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
-instNum = sscanf('pcd0107r.png', '%*3c%u')
+instNum = sscanf('pcd0101r.png', '%*3c%u')
 
 %% load need data for detection
 load ../../data/bgNums.mat
@@ -182,7 +182,7 @@ for curAng = rotAngs
         
         tempScore = -1;
         
-        for rectCase = 1:3
+        for rectCase = 1:4
             rowCenter = round((subRects(rectCase, 1) + subRects(rectCase, 3))/2);
             colCenter = round((subRects(rectCase, 2) + subRects(rectCase, 4))/2);
             
