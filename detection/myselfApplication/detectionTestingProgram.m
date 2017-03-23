@@ -1,4 +1,6 @@
 %% initialize need directory
+startTime0 = clock;
+
 path_detectionUtils = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\deepGraspingCode1\detection\detectionUtils';
 path_utils = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\deepGraspingCode1\util';
 addpath(sprintf(path_detectionUtils,pwd));
@@ -6,7 +8,7 @@ addpath(sprintf(path_utils,pwd));
 
 dataDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
 bgrDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
-instNum = sscanf('pcd0100r.png', '%*3c%u')
+instNum = sscanf('pcd0107r.png', '%*3c%u')
 
 %% load need data for detection
 load ../../data/bgNums.mat
@@ -26,4 +28,6 @@ widths = 10:10:90;
 scanStep = 10;
 
 %% detect
-[bestRects,bestScores] = onePassDectionForInstDefaultParamsDisplay(101,dataDir,bgrDir)
+[bestRects,bestScores] = onePassDectionForInstDefaultParamsDisplay(instNum,dataDir,bgrDir)
+
+elapsedTim0 = etime(clock, startTime0)
