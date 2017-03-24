@@ -20,7 +20,7 @@ addpath('myselfUtil');
 
 dataDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
 bgrDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
-instNum = sscanf('pcd0101r.png', '%*3c%u')
+instNum = sscanf('pcd0110r.png', '%*3c%u')
 
 %% load need data for detection
 load ../../data/bgNums.mat
@@ -36,7 +36,8 @@ bgrFN = sprintf('%s/pcdb%04dr.png',bgrDir,bgNo(instNum));
 
 rotAngs = 0:15:(11*15);
 % rotAngs = 0;
-heights = 10:10:90;
+% heights = 10:10:90;
+heights = 20;
 widths = 10:10:90;
 scanStep = 10;
 
@@ -112,6 +113,7 @@ elapsedTime3 = etime(clock, startTime3)
 startTime4 = clock;
 
 bestScore = -inf;
+bestScore1 = [];
 
 bestAng = 0;
 bestW = 1;
@@ -167,21 +169,18 @@ for curAng = rotAngs
     %% try rectangle center's coordinates
 %     for rowCenter = PAD_SZ:scanStep:curRows-PAD_SZ
 %         for colCenter = PAD_SZ:scanStep:curCols-PAD_SZ
-    rectCoordinate = [PAD_SZ PAD_SZ curRows-PAD_SZ curCols-PAD_SZ]; %firstRow, firstCol, lastRow, lastCol
-    for iteration = 1:6
-%         midRow = round((rectCoordinate(1) + rectCoordinate(3))/2);
-%         midCol = round((rectCoordinate(2) + rectCoordinate(4))/2);
+    relativeRectCoord = [PAD_SZ PAD_SZ curRows-PAD_SZ curCols-PAD_SZ]; %firstRow, firstCol, lastRow, lastCol
+    for iteration = 1:8      
+        segmentRow = round((relativeRectCoord(3) - relativeRectCoord(1))/3);
+        segmentCol = round((relativeRectCoord(4) - relativeRectCoord(2))/3);
         
-        segmentRow = round((rectCoordinate(1) + rectCoordinate(3))/3);
-        segmentCol = round((rectCoordinate(2) + rectCoordinate(4))/3);
+        subRects(1, :) = [relativeRectCoord(1) relativeRectCoord(2) relativeRectCoord(3)-segmentRow relativeRectCoord(4)-segmentCol];
+        subRects(2, :) = [relativeRectCoord(1) relativeRectCoord(2)+segmentCol relativeRectCoord(3)-segmentRow relativeRectCoord(4)];
+        subRects(3, :) = [relativeRectCoord(1)+segmentRow relativeRectCoord(2) relativeRectCoord(3) relativeRectCoord(4)-segmentCol];
+        subRects(4, :) = [relativeRectCoord(1)+segmentRow relativeRectCoord(2)+segmentCol relativeRectCoord(3) relativeRectCoord(4)];
         
-        subRects(1, :) = [rectCoordinate(1) rectCoordinate(2) segmentRow*2 segmentCol*2];
-        subRects(2, :) = [rectCoordinate(1) segmentRow segmentCol*2 rectCoordinate(4)];
-        subRects(3, :) = [segmentRow rectCoordinate(2) rectCoordinate(3) segmentCol*2];
-        subRects(4, :) = [segmentRow segmentCol rectCoordinate(3) rectCoordinate(4)];
-        
-        tempScore = -1;
-        
+        tempScore = -inf;
+        tempSelectedRect = subRects(1, :);
         for rectCase = 1:4
             rowCenter = round((subRects(rectCase, 1) + subRects(rectCase, 3))/2);
             colCenter = round((subRects(rectCase, 2) + subRects(rectCase, 4))/2);
@@ -235,6 +234,7 @@ for curAng = rotAngs
 
                     if curScore > bestScore
                         bestScore = curScore;
+                        bestScore1 = [bestScore1 curScore];
                         bestAng = curAng;
                         bestR = rowCenter;
                         bestC = colCenter;
@@ -256,7 +256,7 @@ for curAng = rotAngs
             end
         end
         
-        rectCoordinate = tempSelectedRect;
+        relativeRectCoord = tempSelectedRect;
     end
 %         end
 %     end
