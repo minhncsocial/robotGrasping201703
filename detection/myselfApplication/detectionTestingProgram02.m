@@ -223,7 +223,7 @@ for curAng = rotAngs
                         bestW = w;
                         
                         %figure(1);
-%                         removeLines(bestLines);
+                        removeLines(bestLines);
                         bestLines = plotGraspRect(curRect,'g','y');
                         drawnow;
                     end

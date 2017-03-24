@@ -171,6 +171,8 @@ for curAng = rotAngs
 %     for rowCenter = PAD_SZ:scanStep:curRows-PAD_SZ
 %         for colCenter = PAD_SZ:scanStep:curCols-PAD_SZ
     relativeRectCoord = [PAD_SZ PAD_SZ curRows-PAD_SZ curCols-PAD_SZ]; %firstRow, firstCol, lastRow, lastCol
+    
+    scoreMarks1 = [];
     for iteration = 1:8      
         segmentRow = round((relativeRectCoord(3) - relativeRectCoord(1))/3);
         segmentCol = round((relativeRectCoord(4) - relativeRectCoord(2))/3);
@@ -214,7 +216,8 @@ for curAng = rotAngs
                     
                     curScore = scoreRectangle(curI, curD, curN, curMask, curDMask, FEATSZ, MASK_RSZ_THRESH, featMeans, featStds, trainModes, w1, w2, w_class, tempRectInfo(1), tempRectInfo(2), tempRectInfo(3), tempRectInfo(4));
                     
-                    scoreMarks = [scoreMarks; curScore];
+%                     scoreMarks = [scoreMarks; curScore];
+%                     scoreMarks1 = [scoreMarks1; curScore];
                     
                     if curScore > tempScore
                         tempScore = curScore;
@@ -255,10 +258,10 @@ for curAng = rotAngs
 
                             bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
 
-                            figure(333);
-                            plot(1:size(bestScore1, 2), bestScore1);
-                            figure(444);
-                            plot(1:size(scoreMarks, 2), scoreMarks);
+%                             figure(333);
+%                             plot(1:size(bestScore1, 2), bestScore1);
+%                             figure(444);
+%                             plot(1:size(scoreMarks, 1), scoreMarks);
 
                             elapsedTime4 = etime(clock, startTime4)
                             
@@ -278,6 +281,7 @@ for curAng = rotAngs
     end
 %         end
 %     end
+%     figure(555); plot(1:size(scoreMarks1, 1), scoreMarks1);
     set(0, 'CurrentFigure', fig2222);
     surf(scoreTable);
 end
@@ -291,7 +295,7 @@ rectPoints = round([bestR-bestH/2 bestC-bestW/2; bestR+bestH/2 bestC-bestW/2; be
 
 bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
 
-figure(333);
-plot(1:size(bestScore1, 2), bestScore1);
+% figure(333);
+% plot(1:size(bestScore1, 2), bestScore1);
 
 elapsedTime4 = etime(clock, startTime4)
