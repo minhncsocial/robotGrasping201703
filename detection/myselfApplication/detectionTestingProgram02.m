@@ -223,7 +223,7 @@ for curAng = rotAngs
                         bestW = w;
                         
                         %figure(1);
-                        removeLines(bestLines);
+%                         removeLines(bestLines);
                         bestLines = plotGraspRect(curRect,'g','y');
                         drawnow;
                     end
@@ -249,5 +249,8 @@ end
 rectPoints = [bestR bestC; bestR+bestH bestC; bestR+bestH bestC+bestW; bestR bestC+bestW];
 
 bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
+
+figure(333);
+plot(1:size(bestScore1, 2), bestScore1);
 
 elapsedTime4 = etime(clock, startTime4)
