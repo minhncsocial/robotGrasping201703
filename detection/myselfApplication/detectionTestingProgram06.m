@@ -273,4 +273,7 @@ rectPoints = round([bestR-bestH/2 bestC-bestW/2; bestR+bestH/2 bestC-bestW/2; be
 
 bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
 
+figure(333);
+plot(1:size(bestScore1, 2), bestScore1);
+
 elapsedTime4 = etime(clock, startTime4)
