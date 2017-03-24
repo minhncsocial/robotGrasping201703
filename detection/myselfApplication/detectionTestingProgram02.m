@@ -15,7 +15,7 @@ addpath(path_utils);
 
 dataDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
 bgrDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
-instNum = sscanf('pcd0107r.png', '%*3c%u')
+instNum = sscanf('pcd0110r.png', '%*3c%u')
 
 %% load need data for detection
 load ../../data/bgNums.mat
@@ -32,7 +32,7 @@ bgrFN = sprintf('%s/pcdb%04dr.png',bgrDir,bgNo(instNum));
 rotAngs = 0:15:(11*15);
 heights = 10:10:90;
 widths = 10:10:90;
-scanStep = 5;
+scanStep = 10;
 
 elapsedTim0 = etime(clock, startTime0)
 %%==============================detect=====================================
@@ -106,6 +106,7 @@ elapsedTime3 = etime(clock, startTime3)
 startTime4 = clock;
 
 bestScore = -inf;
+bestScore1 = [];
 
 bestAng = -1;
 bestW = -1;
@@ -214,6 +215,7 @@ for curAng = rotAngs
 
                     if curScore > bestScore
                         bestScore = curScore;
+                        bestScore1 = [bestScore1 curScore];
                         bestAng = curAng;
                         bestR = r;
                         bestC = c;
