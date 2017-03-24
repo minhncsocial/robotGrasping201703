@@ -114,6 +114,7 @@ startTime4 = clock;
 
 bestScore = -inf;
 bestScore1 = [];
+scoreMarks = [];
 
 bestAng = 0;
 bestW = 1;
@@ -213,6 +214,8 @@ for curAng = rotAngs
                     
                     curScore = scoreRectangle(curI, curD, curN, curMask, curDMask, FEATSZ, MASK_RSZ_THRESH, featMeans, featStds, trainModes, w1, w2, w_class, tempRectInfo(1), tempRectInfo(2), tempRectInfo(3), tempRectInfo(4));
                     
+                    scoreMarks = [scoreMarks; curScore];
+                    
                     if curScore > tempScore
                         tempScore = curScore;
                         tempSelectedRect = subRects(rectCase, :);
@@ -254,6 +257,8 @@ for curAng = rotAngs
 
                             figure(333);
                             plot(1:size(bestScore1, 2), bestScore1);
+                            figure(444);
+                            plot(1:size(scoreMarks, 2), scoreMarks);
 
                             elapsedTime4 = etime(clock, startTime4)
                             
