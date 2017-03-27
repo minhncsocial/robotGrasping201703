@@ -187,7 +187,7 @@ for curAng = rotAngs
         subRects(4, :) = [relativeRectCoord(1)+segmentRow relativeRectCoord(2)+segmentCol relativeRectCoord(3) relativeRectCoord(4)];
         
         tempScore = 0;
-        tempSelectedRect = [];
+        tempSelectedRect = subRects(1, :);
         for rectCase = 1:4
             rowCenter = round((subRects(rectCase, 1) + subRects(rectCase, 3))/2);
             colCenter = round((subRects(rectCase, 2) + subRects(rectCase, 4))/2);
@@ -257,7 +257,7 @@ for curAng = rotAngs
                         bestLines = plotGraspRect(curRect,'g','y');
                         drawnow;
                         
-                        if curScore > 10
+                        if curScore > 6
                             rectPoints = round([bestR-bestH/2 bestC-bestW/2; bestR+bestH/2 bestC-bestW/2; bestR+bestH/2 bestC+bestW/2; bestR-bestH/2 bestC+bestW/2]);
 
                             bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
