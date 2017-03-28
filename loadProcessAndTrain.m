@@ -1,6 +1,7 @@
 % Set this to the path to your folder containing the Cornell Grasping
 % Dataset (this folder should contain a lot of pcd_* files)
-dataDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
+% dataDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
+dataDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Data\01';
 
 % Load the grasping dataset
 cd loadData/
