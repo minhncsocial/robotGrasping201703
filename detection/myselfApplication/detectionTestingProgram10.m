@@ -1,5 +1,9 @@
+%% Test Fixed Height
+%**************************************************************************
 %% initialize need directory
-clear all; close all; clc;
+clear all; 
+% close all; 
+clc;
 
 startTime0 = clock;
 path_detectionUtils = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\deepGraspingCode1\detection\detectionUtils';
@@ -9,13 +13,14 @@ temp2 = sprintf(path_utils,pwd);
 
 addpath(path_detectionUtils);
 addpath(path_utils);
+addpath('myselfUtil');
 
 % addpath ../detectionUtils/
 % addpath ../../util
 
 dataDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
 bgrDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
-instNum = sscanf('pcd0117r.png', '%*3c%u')
+instNum = sscanf('pcd0115r.png', '%*3c%u')
 
 %% load need data for detection
 load ../../data/bgNums.mat
@@ -30,7 +35,9 @@ w_class = w_class(:,1);
 bgrFN = sprintf('%s/pcdb%04dr.png',bgrDir,bgNo(instNum));
 
 rotAngs = 0:15:(11*15);
-heights = 10:10:90;
+% rotAngs = 0;
+% heights = 10:10:90;
+heights = 20;
 widths = 10:10:90;
 scanStep = 10;
 
@@ -74,6 +81,7 @@ startTime2 = clock;
 % couldn't get, and eliminate additional outliers where Kinect gave
 % obviously invalid values
 D = I(:,:,4);
+D = D*0;
 DMask = D ~= 0;
 
 [D,DMask] = removeOutliersDet(D,DMask,4);
@@ -81,7 +89,7 @@ DMask = D ~= 0;
 D = smartInterpMaskedData(D,DMask);
 
 %% display input image
-fig1 = figure(1);
+fig11 = figure(11);
 imshow(uint8(I(:,:,1:3)));
 drawnow;
 
@@ -107,12 +115,13 @@ startTime4 = clock;
 
 bestScore = -inf;
 bestScore1 = [];
+scoreMarks = [];
 
-bestAng = -1;
-bestW = -1;
-bestH = -1;
-bestR = -1;
-bestC = -1;
+bestAng = 0;
+bestW = 1;
+bestH = 1;
+bestR = 1;
+bestC = 1;
 
 % Precompute which widths we need to use with each height so we don't have
 % to compute this in an inner loop
@@ -128,6 +137,7 @@ bestLines = [];
 barH = [];
 
 IMask = ones(bbCorners(2,1)-bbCorners(1,1)+1,bbCorners(2,2)-bbCorners(1,2)+1);
+goldenRatio = (sqrt(5) - 1) / 2;
 
 %% browse image to detect grasping rectangle
 for curAng = rotAngs
@@ -149,61 +159,81 @@ for curAng = rotAngs
     curCols = size(curI,2);
     
     %% ===========================Score Table==============================
-    scoreTable = zeros(curRows, curCols);
-    fig2222 = figure(2222);
+    scoreTable = zeros(curRows, curCols)-10;
+%     fig2222 = figure(2222);
     %% ====================================================================
     
     % Going by the r/c dimensions first, then w/h should be more cache
     % efficient since it repeatedly reads from the same locations. Who
     % knows if that actually matters but the ordering's arbitrary anyway
-    for r = 1:scanStep:curRows-min(heights)
-        for c = 1:scanStep:curCols-min(widths)
-            for i = 1:length(heights)
-                
-                h = heights(i);
-                
-                % If we ran off the bottom, we can move on to the next col
-                if r + h > curRows
-                    break;
+    
+    halfMinHeight = 5;
+    halfMinWidth = 5;
+    %% try rectangle center's coordinates
+%     for rowCenter = PAD_SZ:scanStep:curRows-PAD_SZ
+%         for colCenter = PAD_SZ:scanStep:curCols-PAD_SZ
+    relativeRectCoord = [PAD_SZ PAD_SZ curRows-PAD_SZ curCols-PAD_SZ]; %firstRow, firstCol, lastRow, lastCol
+    
+    scoreMarks1 = [];
+    for iteration = 1:6      
+        if isempty(relativeRectCoord)
+            continue;
+        end
+        segmentRow = round((relativeRectCoord(3) - relativeRectCoord(1))*goldenRatio);
+        segmentCol = round((relativeRectCoord(4) - relativeRectCoord(2))*goldenRatio);
+        
+        subRects(1, :) = [relativeRectCoord(1) relativeRectCoord(2) relativeRectCoord(1)+segmentRow relativeRectCoord(2)+segmentCol];
+        subRects(2, :) = [relativeRectCoord(1) relativeRectCoord(4)-segmentCol relativeRectCoord(1)+segmentRow relativeRectCoord(4)];
+        subRects(3, :) = [relativeRectCoord(3)-segmentRow relativeRectCoord(2) relativeRectCoord(3) relativeRectCoord(2)+segmentCol];
+        subRects(4, :) = [relativeRectCoord(3)-segmentRow relativeRectCoord(4)-segmentCol relativeRectCoord(3) relativeRectCoord(4)];
+        
+        tempScore = 0;
+        tempSelectedRect = subRects(1, :);
+        for rectCase = 1:4
+            rowCenter = round((subRects(rectCase, 1) + subRects(rectCase, 3))/2);
+            colCenter = round((subRects(rectCase, 2) + subRects(rectCase, 4))/2);
+            
+            for hh = 1:length(heights)
+                heiRect = heights(hh);
+                % ignore the invalid rectangle
+                if (rowCenter-heiRect/2 < 1) | (rowCenter+heiRect/2 > curRows)
+                    continue;
                 end
                 
-                % Only run through the widths we need to - anything smaller
-                % than the current height (as precomputed) doesn't need to
-                % be used
-                for w = widths(useWdForHt(i,:))
-                    
-                    % If we run off the side, we can move on to
-                    % the next height
-                    if c + w > curCols
-                        break;
+                for widRect = widths(useWdForHt(hh,:))
+                    % ignore the invalid 
+                    if (widRect <= heiRect) | (colCenter-widRect/2 < 1) | (colCenter+widRect/2 > curCols)
+                        continue;
                     end
+                    
+                    heiDiv2 = heiRect/2;
+                    widDiv2 = widRect/2;
+                    
+                    tempRectInfo = [rowCenter-heiDiv2; colCenter-widDiv2; heiRect; widRect];
+                    tempRectPoints = [rowCenter-heiDiv2 colCenter-widDiv2; rowCenter+heiDiv2 colCenter-widDiv2; rowCenter+heiDiv2 colCenter+widDiv2; rowCenter-heiDiv2 colCenter+widDiv2];
                     
                     % If the rectangle doesn't contain enough of the
                     % object (plus padding), move on because it's probably
                     % not a valid grasp regardless of score
-                    if rectMaskFraction(curMask,r,c,h,w) < OBJ_MASK_THRESH || cornerMaskedOut(curIMask,r,c,h,w)
+                    if rectMaskFraction(curMask,tempRectInfo(1),tempRectInfo(2),tempRectInfo(3),tempRectInfo(4)) < OBJ_MASK_THRESH || cornerMaskedOut(curIMask,tempRectInfo(1),tempRectInfo(2),tempRectInfo(3),tempRectInfo(4))
                         continue;
                     end
                     
-                    % Have a valid candidate rectangle
-                    % Extract features for the current rectangle into the
-                    % format the DBN expects
-                    [curFeat, curFeatMask] = featForRect(curI,curD,curN,curDMask,r,c,h,w,FEATSZ,MASK_RSZ_THRESH);
-                    curFeat = simpleWhiten(curFeat,featMeans,featStds);
-                    curFeat = scaleFeatForMask(curFeat, curFeatMask, trainModes);
+                    curScore = scoreRectangle(curI, curD, curN, curMask, curDMask, FEATSZ, MASK_RSZ_THRESH, featMeans, featStds, trainModes, w1, w2, w_class, tempRectInfo(1), tempRectInfo(2), tempRectInfo(3), tempRectInfo(4));
                     
-                    % Run the features through the DBN and get a score.
-                    % Might be more efficient to collect features for a
-                    % group of rectangles and run them all at once
-                    w1Probs = 1./(1+exp(-[curFeat 1]*w1));
-                    w2Probs = 1./(1+exp(-[w1Probs 1]*w2));
-                    curScore = [w2Probs 1]* w_class;
+                    scoreMarks = [scoreMarks; curScore];
+                    scoreMarks1 = [scoreMarks1; curScore];
                     
-                    rectPoints = [r c; r+h c; r+h c+w; r c+w];
+                    if curScore > tempScore
+                        tempScore = curScore;
+                        tempSelectedRect = subRects(rectCase, :);
+                    end
+                    
+                    rectPoints = tempRectPoints;
                     curRect = localRectToIm(rectPoints,curAng,bbCorners);
                     
                     %figure(1);
-                    set(0, 'CurrentFigure', fig1);
+                    set(0, 'CurrentFigure', fig11);
                     removeLines(prevLines);
                     prevLines = plotGraspRect(curRect);
                     %delete(barH);
@@ -217,26 +247,46 @@ for curAng = rotAngs
                         bestScore = curScore;
                         bestScore1 = [bestScore1 curScore];
                         bestAng = curAng;
-                        bestR = r;
-                        bestC = c;
-                        bestH = h;
-                        bestW = w;
+                        bestR = rowCenter;
+                        bestC = colCenter;
+                        bestH = heiRect;
+                        bestW = widRect;
                         
                         %figure(1);
+                        set(0, 'CurrentFigure', fig11);
                         removeLines(bestLines);
                         bestLines = plotGraspRect(curRect,'g','y');
                         drawnow;
-                    end
-                    
+                        
+                        if curScore > 6
+                            rectPoints = round([bestR-bestH/2 bestC-bestW/2; bestR+bestH/2 bestC-bestW/2; bestR+bestH/2 bestC+bestW/2; bestR-bestH/2 bestC+bestW/2]);
+
+                            bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
+
+                            figure(333);
+                            plot(1:size(bestScore1, 2), bestScore1);
+                            figure(444);
+                            plot(1:size(scoreMarks, 1), scoreMarks);
+
+                            elapsedTime4 = etime(clock, startTime4)
+                            
+                            return;
+                        end
+                    end                    
                     %% ================Update Score========================
-                    if curScore > scoreTable(r, c) 
-                        scoreTable(r, c) = curScore;
-                    end
+%                     if curScore > scoreTable(rowCenter, colCenter) 
+%                         scoreTable(rowCenter, colCenter) = curScore;
+%                     end
                     %% ====================================================
                 end
             end
         end
+        
+        relativeRectCoord = tempSelectedRect;
     end
+%         end
+%     end
+    figure(555); plot(1:size(scoreMarks1, 1), scoreMarks1); grid on;
 %     set(0, 'CurrentFigure', fig2222);
 %     surf(scoreTable);
 end
@@ -246,7 +296,7 @@ end
 % Take the best rectangle params we found and convert to image space
 % This is actually a little tricky because the image rotation operation
 % isn't straighforward to invert
-rectPoints = [bestR bestC; bestR+bestH bestC; bestR+bestH bestC+bestW; bestR bestC+bestW];
+rectPoints = round([bestR-bestH/2 bestC-bestW/2; bestR+bestH/2 bestC-bestW/2; bestR+bestH/2 bestC+bestW/2; bestR-bestH/2 bestC+bestW/2]);
 
 bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
 
