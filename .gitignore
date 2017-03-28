@@ -1,2 +1,4 @@
 graspTestData.mat
 graspTrainData.mat
+
+*.asm
