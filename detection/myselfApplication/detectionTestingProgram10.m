@@ -20,7 +20,7 @@ addpath('myselfUtil');
 
 dataDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
 bgrDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
-instNum = sscanf('pcd0115r.png', '%*3c%u')
+instNum = sscanf('pcd0117r.png', '%*3c%u')
 
 %% load need data for detection
 load ../../data/bgNums.mat
