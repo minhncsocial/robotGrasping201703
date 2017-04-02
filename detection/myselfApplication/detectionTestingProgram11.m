@@ -1,7 +1,7 @@
 %% Test Fixed Height
 %**************************************************************************
 %% initialize need directory
-clear all; 
+% clear all; 
 % close all; 
 clc;
 
@@ -20,7 +20,7 @@ addpath('myselfUtil');
 
 dataDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
 bgrDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
-instNum = sscanf('pcd2321r.png', '%*3c%u')
+instNum = sscanf('pcd0111r.png', '%*3c%u')
 
 %% load need data for detection
 load ../../data/bgNums.mat
@@ -41,8 +41,8 @@ end
 rotAngs = 0:15:(11*15);
 % rotAngs = 0;
 % heights = 10:10:90;
-heights = 30;
-widths = 30:30:120;
+heights = 50;
+widths = 50:10:90;
 scanStep = 10;
 
 elapsedTim0 = etime(clock, startTime0)
@@ -71,7 +71,7 @@ widths = sort(widths);
 
 %% Load grasping data. Loads into a 4-channel image where the first 3
 % channels are RGB and the fourth is depth
-I = graspPCDToRGBDImage_ver2(dataDir,instNum);
+I = graspPCDToRGBDImage(dataDir,instNum);
 BG = double(imread(bgrFN));
 
 elapsedTime1 = etime(clock, startTime1)
@@ -85,7 +85,7 @@ startTime2 = clock;
 % couldn't get, and eliminate additional outliers where Kinect gave
 % obviously invalid values
 D = I(:,:,4);
-% D = D*0;
+D = D*0;
 DMask = D ~= 0;
 
 [D,DMask] = removeOutliersDet(D,DMask,4);
