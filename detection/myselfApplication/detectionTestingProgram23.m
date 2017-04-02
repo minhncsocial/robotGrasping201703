@@ -159,10 +159,6 @@ for curAng = rotAngs
     curRows = size(curI,1);
     curCols = size(curI,2);
     
-    %% ===========================Score Table==============================
-    scoreTable = zeros(curRows, curCols)-10;
-%     fig2222 = figure(2222);
-    %% ====================================================================
     
     % Going by the r/c dimensions first, then w/h should be more cache
     % efficient since it repeatedly reads from the same locations. Who
@@ -174,22 +170,22 @@ for curAng = rotAngs
 %     for rowCenter = PAD_SZ:scanStep:curRows-PAD_SZ
 %         for colCenter = PAD_SZ:scanStep:curCols-PAD_SZ
     relativeRectCoord = [PAD_SZ PAD_SZ curRows-PAD_SZ curCols-PAD_SZ]; %firstRow, firstCol, lastRow, lastCol
+    segmentRow = round((relativeRectCoord(3) - relativeRectCoord(1))*goldenRatio);
+    segmentCol = round((relativeRectCoord(4) - relativeRectCoord(2))*goldenRatio);
+
+    subRects(1, :) = [relativeRectCoord(1) relativeRectCoord(2) relativeRectCoord(1)+segmentRow relativeRectCoord(2)+segmentCol];
+    subRects(2, :) = [relativeRectCoord(1) relativeRectCoord(4)-segmentCol subRects(1, 3) relativeRectCoord(4)];
+    subRects(3, :) = [relativeRectCoord(3)-segmentRow relativeRectCoord(2) relativeRectCoord(3) subRects(1, 4)];
+    subRects(4, :) = [subRects(3, 1) subRects(2, 2) relativeRectCoord(3) relativeRectCoord(4)];
     
     scoreMarks1 = [];
     for iteration = 1:5     
         if isempty(relativeRectCoord)
             continue;
         end
-        segmentRow = round((relativeRectCoord(3) - relativeRectCoord(1))*goldenRatio);
-        segmentCol = round((relativeRectCoord(4) - relativeRectCoord(2))*goldenRatio);
-        
-        subRects(1, :) = [relativeRectCoord(1) relativeRectCoord(2) relativeRectCoord(1)+segmentRow relativeRectCoord(2)+segmentCol];
-        subRects(2, :) = [relativeRectCoord(1) relativeRectCoord(4)-segmentCol relativeRectCoord(1)+segmentRow relativeRectCoord(4)];
-        subRects(3, :) = [relativeRectCoord(3)-segmentRow relativeRectCoord(2) relativeRectCoord(3) relativeRectCoord(2)+segmentCol];
-        subRects(4, :) = [relativeRectCoord(3)-segmentRow relativeRectCoord(4)-segmentCol relativeRectCoord(3) relativeRectCoord(4)];
         
         tempScore = 0;
-        tempSelectedRect = subRects(1, :);
+        tempSelectedRect = 1;
         for rectCase = 1:4
             rowCenter = round((subRects(rectCase, 1) + subRects(rectCase, 3))/2);
             colCenter = round((subRects(rectCase, 2) + subRects(rectCase, 4))/2);
@@ -222,12 +218,9 @@ for curAng = rotAngs
                     
                     curScore = scoreRectangle(curI, curD, curN, curMask, curDMask, FEATSZ, MASK_RSZ_THRESH, featMeans, featStds, trainModes, w1, w2, w_class, tempRectInfo(1), tempRectInfo(2), tempRectInfo(3), tempRectInfo(4));
                     
-                    scoreMarks = [scoreMarks; curScore];
-                    scoreMarks1 = [scoreMarks1; curScore];
-                    
                     if curScore > tempScore
                         tempScore = curScore;
-                        tempSelectedRect = subRects(rectCase, :);
+                        tempSelectedRect = rectCase;
                     end
                     
                     rectPoints = tempRectPoints;
@@ -246,7 +239,6 @@ for curAng = rotAngs
 
                     if curScore > bestScore
                         bestScore = curScore;
-                        bestScore1 = [bestScore1 curScore];
                         bestAng = curAng;
                         bestR = rowCenter;
                         bestC = colCenter;
@@ -259,37 +251,55 @@ for curAng = rotAngs
                         bestLines = plotGraspRect(curRect,'g','y');
                         drawnow;
                         
-                        if curScore > 8
-                            rectPoints = round([bestR-bestH/2 bestC-bestW/2; bestR+bestH/2 bestC-bestW/2; bestR+bestH/2 bestC+bestW/2; bestR-bestH/2 bestC+bestW/2]);
-
-                            bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
-
-                            figure(333);
-                            plot(1:size(bestScore1, 2), bestScore1);
-                            figure(444);
-                            plot(1:size(scoreMarks, 1), scoreMarks);
-
-                            elapsedTime4 = etime(clock, startTime4)
-                            
-                            return;
-                        end
+%                         if curScore > 10
+%                             rectPoints = round([bestR-bestH/2 bestC-bestW/2; bestR+bestH/2 bestC-bestW/2; bestR+bestH/2 bestC+bestW/2; bestR-bestH/2 bestC+bestW/2]);
+% 
+%                             bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
+% 
+%                             figure(333);
+%                             plot(1:size(bestScore1, 2), bestScore1);
+%                             figure(444);
+%                             plot(1:size(scoreMarks, 1), scoreMarks);
+% 
+%                             elapsedTime4 = etime(clock, startTime4)
+%                             
+%                             return;
+%                         end
                     end                    
-                    %% ================Update Score========================
-%                     if curScore > scoreTable(rowCenter, colCenter) 
-%                         scoreTable(rowCenter, colCenter) = curScore;
-%                     end
-                    %% ====================================================
                 end
             end
         end
         
-        relativeRectCoord = tempSelectedRect;
+        relativeRectCoord = subRects(tempSelectedRect, :);
+        segmentRow = round(segmentRow*goldenRatio);
+        segmentCol = round(segmentCol*goldenRatio);
+        switch tempSelectedRect
+            case 1
+                RR1 = subRects(3, 1); 
+                CC1 = subRects(2, 2);
+                RR2 = relativeRectCoord(1) + segmentRow;
+                CC2 = relativeRectCoord(2) + segmentCol;               
+            case 2
+                RR1 = subRects(3, 1); 
+                CC1 = relativeRectCoord(4) - segmentCol;
+                RR2 = relativeRectCoord(1) + segmentRow;
+                CC2 = subRects(1, 4);              
+            case 3
+                RR1 = relativeRectCoord(3) - segmentRow;
+                CC1 = subRects(2, 2);
+                RR2 = subRects(1, 3);
+                CC2 = relativeRectCoord(2) + segmentCol;               
+            case 4
+                RR1 = relativeRectCoord(3) - segmentRow;
+                CC1 = relativeRectCoord(4) - segmentCol;
+                RR2 = subRects(1, 3);
+                CC2 = subRects(1, 4);               
+        end
+        subRects(1, :) = [relativeRectCoord(1) relativeRectCoord(2) RR2 CC2];
+        subRects(2, :) = [relativeRectCoord(1) CC1 RR2 relativeRectCoord(4)];
+        subRects(3, :) = [RR1 relativeRectCoord(2) relativeRectCoord(3) CC2];
+        subRects(4, :) = [RR1 CC1 relativeRectCoord(3) relativeRectCoord(4)]; 
     end
-%         end
-%     end
-    figure(555); plot(1:size(scoreMarks1, 1), scoreMarks1); grid on;
-%     set(0, 'CurrentFigure', fig2222);
-%     surf(scoreTable);
 end
 
 % removeLines(prevLines);
@@ -300,8 +310,5 @@ end
 rectPoints = round([bestR-bestH/2 bestC-bestW/2; bestR+bestH/2 bestC-bestW/2; bestR+bestH/2 bestC+bestW/2; bestR-bestH/2 bestC+bestW/2]);
 
 bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
-
-figure(333);
-plot(1:size(bestScore1, 2), bestScore1);
 
 elapsedTime4 = etime(clock, startTime4)

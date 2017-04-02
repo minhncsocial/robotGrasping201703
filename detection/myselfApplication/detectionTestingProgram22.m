@@ -159,10 +159,6 @@ for curAng = rotAngs
     curRows = size(curI,1);
     curCols = size(curI,2);
     
-    %% ===========================Score Table==============================
-    scoreTable = zeros(curRows, curCols)-10;
-%     fig2222 = figure(2222);
-    %% ====================================================================
     
     % Going by the r/c dimensions first, then w/h should be more cache
     % efficient since it repeatedly reads from the same locations. Who
@@ -222,9 +218,6 @@ for curAng = rotAngs
                     
                     curScore = scoreRectangle(curI, curD, curN, curMask, curDMask, FEATSZ, MASK_RSZ_THRESH, featMeans, featStds, trainModes, w1, w2, w_class, tempRectInfo(1), tempRectInfo(2), tempRectInfo(3), tempRectInfo(4));
                     
-                    scoreMarks = [scoreMarks; curScore];
-                    scoreMarks1 = [scoreMarks1; curScore];
-                    
                     if curScore > tempScore
                         tempScore = curScore;
                         tempSelectedRect = subRects(rectCase, :);
@@ -246,7 +239,6 @@ for curAng = rotAngs
 
                     if curScore > bestScore
                         bestScore = curScore;
-                        bestScore1 = [bestScore1 curScore];
                         bestAng = curAng;
                         bestR = rowCenter;
                         bestC = colCenter;
@@ -259,37 +251,27 @@ for curAng = rotAngs
                         bestLines = plotGraspRect(curRect,'g','y');
                         drawnow;
                         
-                        if curScore > 8
-                            rectPoints = round([bestR-bestH/2 bestC-bestW/2; bestR+bestH/2 bestC-bestW/2; bestR+bestH/2 bestC+bestW/2; bestR-bestH/2 bestC+bestW/2]);
-
-                            bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
-
-                            figure(333);
-                            plot(1:size(bestScore1, 2), bestScore1);
-                            figure(444);
-                            plot(1:size(scoreMarks, 1), scoreMarks);
-
-                            elapsedTime4 = etime(clock, startTime4)
-                            
-                            return;
-                        end
+%                         if curScore > 10
+%                             rectPoints = round([bestR-bestH/2 bestC-bestW/2; bestR+bestH/2 bestC-bestW/2; bestR+bestH/2 bestC+bestW/2; bestR-bestH/2 bestC+bestW/2]);
+% 
+%                             bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
+% 
+%                             figure(333);
+%                             plot(1:size(bestScore1, 2), bestScore1);
+%                             figure(444);
+%                             plot(1:size(scoreMarks, 1), scoreMarks);
+% 
+%                             elapsedTime4 = etime(clock, startTime4)
+%                             
+%                             return;
+%                         end
                     end                    
-                    %% ================Update Score========================
-%                     if curScore > scoreTable(rowCenter, colCenter) 
-%                         scoreTable(rowCenter, colCenter) = curScore;
-%                     end
-                    %% ====================================================
                 end
             end
         end
         
         relativeRectCoord = tempSelectedRect;
     end
-%         end
-%     end
-    figure(555); plot(1:size(scoreMarks1, 1), scoreMarks1); grid on;
-%     set(0, 'CurrentFigure', fig2222);
-%     surf(scoreTable);
 end
 
 % removeLines(prevLines);
@@ -300,8 +282,5 @@ end
 rectPoints = round([bestR-bestH/2 bestC-bestW/2; bestR+bestH/2 bestC-bestW/2; bestR+bestH/2 bestC+bestW/2; bestR-bestH/2 bestC+bestW/2]);
 
 bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
-
-figure(333);
-plot(1:size(bestScore1, 2), bestScore1);
 
 elapsedTime4 = etime(clock, startTime4)

@@ -20,7 +20,7 @@ addpath('myselfUtil');
 
 dataDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
 bgrDir = 'E:\WORK\ORGANIZATION\NTUT\Robot Grasping\Project02\Code\rawDataSet';
-instNum = sscanf('pcd0101r.png', '%*3c%u')
+instNum = sscanf('pcd2321r.png', '%*3c%u')
 
 %% load need data for detection
 load ../../data/bgNums.mat
@@ -32,13 +32,17 @@ load ../../data/graspWhtParams.mat
 % Just use the positive-class weights for grasping.
 w_class = w_class(:,1);
 
-bgrFN = sprintf('%s/pcdb%04dr.png',bgrDir,bgNo(instNum));
+if instNum < 2000
+    bgrFN = sprintf('%s/pcdb%04dr.png',bgrDir,bgNo(instNum));
+else
+    bgrFN = sprintf('%s/pcdb%04dr.png',bgrDir, 2002);
+end
 
 rotAngs = 0:15:(11*15);
 % rotAngs = 0;
 % heights = 10:10:90;
-heights = 20;
-widths = 10:10:90;
+heights = 30;
+widths = 30:30:120;
 scanStep = 10;
 
 elapsedTim0 = etime(clock, startTime0)
@@ -48,7 +52,7 @@ startTime1 = clock;
 
 %% initialize parameters
 % PAD_SZ = 20;
-PAD_SZ = 5;
+PAD_SZ = 20;
 
 % Thresholds to use when transforming masks to convert back to binary
 MASK_ROT_THRESH = 0.75;
@@ -67,7 +71,7 @@ widths = sort(widths);
 
 %% Load grasping data. Loads into a 4-channel image where the first 3
 % channels are RGB and the fourth is depth
-I = graspPCDToRGBDImage(dataDir,instNum);
+I = graspPCDToRGBDImage_ver2(dataDir,instNum);
 BG = double(imread(bgrFN));
 
 elapsedTime1 = etime(clock, startTime1)
@@ -100,7 +104,6 @@ startTime3 = clock;
 
 % Work in YUV color
 I = rgb2yuv(I(:,:,1:3));
-% I = I*0;
 
 %% Pick out the area of the image corresponding to the object's (padded)
 % bounding box to work with
@@ -160,7 +163,7 @@ for curAng = rotAngs
     curCols = size(curI,2);
     
     %% ===========================Score Table==============================
-    scoreTable = zeros(curRows, curCols)-10;
+%     scoreTable = zeros(curRows, curCols)-10;
 %     fig2222 = figure(2222);
     %% ====================================================================
     
@@ -176,7 +179,7 @@ for curAng = rotAngs
     relativeRectCoord = [PAD_SZ PAD_SZ curRows-PAD_SZ curCols-PAD_SZ]; %firstRow, firstCol, lastRow, lastCol
     
     scoreMarks1 = [];
-    for iteration = 1:5     
+    for iteration = 1:5
         if isempty(relativeRectCoord)
             continue;
         end
@@ -201,9 +204,10 @@ for curAng = rotAngs
                     continue;
                 end
                 
-                for widRect = widths(useWdForHt(hh,:))
+%                 for widRect = widths(useWdForHt(hh,:))
+                for widRect = 30:10:100
                     % ignore the invalid 
-                    if (widRect <= heiRect) | (colCenter-widRect/2 < 1) | (colCenter+widRect/2 > curCols)
+                    if (colCenter-widRect/2 < 1) | (colCenter+widRect/2 > curCols)
                         continue;
                     end
                     
@@ -222,8 +226,8 @@ for curAng = rotAngs
                     
                     curScore = scoreRectangle(curI, curD, curN, curMask, curDMask, FEATSZ, MASK_RSZ_THRESH, featMeans, featStds, trainModes, w1, w2, w_class, tempRectInfo(1), tempRectInfo(2), tempRectInfo(3), tempRectInfo(4));
                     
-                    scoreMarks = [scoreMarks; curScore];
-                    scoreMarks1 = [scoreMarks1; curScore];
+%                     scoreMarks = [scoreMarks; curScore];
+%                     scoreMarks1 = [scoreMarks1; curScore];
                     
                     if curScore > tempScore
                         tempScore = curScore;
@@ -259,7 +263,7 @@ for curAng = rotAngs
                         bestLines = plotGraspRect(curRect,'g','y');
                         drawnow;
                         
-                        if curScore > 8
+                        if curScore > 10
                             rectPoints = round([bestR-bestH/2 bestC-bestW/2; bestR+bestH/2 bestC-bestW/2; bestR+bestH/2 bestC+bestW/2; bestR-bestH/2 bestC+bestW/2]);
 
                             bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
@@ -287,7 +291,7 @@ for curAng = rotAngs
     end
 %         end
 %     end
-    figure(555); plot(1:size(scoreMarks1, 1), scoreMarks1); grid on;
+%     figure(555); plot(1:size(scoreMarks1, 1), scoreMarks1); grid on;
 %     set(0, 'CurrentFigure', fig2222);
 %     surf(scoreTable);
 end
@@ -301,7 +305,7 @@ rectPoints = round([bestR-bestH/2 bestC-bestW/2; bestR+bestH/2 bestC-bestW/2; be
 
 bestRect = localRectToIm(rectPoints,bestAng,bbCorners);
 
-figure(333);
-plot(1:size(bestScore1, 2), bestScore1);
+% figure(333);
+% plot(1:size(bestScore1, 2), bestScore1);
 
 elapsedTime4 = etime(clock, startTime4)
